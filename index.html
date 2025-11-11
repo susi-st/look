@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生涯參訪 - 志願配對程式</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+        }
+        .tab-button {
+            @apply px-4 py-2 font-medium text-gray-600 rounded-t-lg transition-colors duration-200 whitespace-nowrap;
+        }
+        .tab-button.active {
+            @apply bg-white text-blue-600 border-b-2 border-blue-600;
+        }
+        .tab-pane {
+            @apply p-4 bg-white rounded-b-lg shadow;
+        }
+        .rank-1 { color: #DC2626; font-weight: bold; }
+        .rank-2 { color: #2563EB; font-weight: bold; }
+        .rank-3 { color: #16A34A; font-weight: bold; }
+        .rank-4 { color: #EA580C; font-weight: bold; }
+        .rank-5 { color: #9333EA; font-weight: bold; }
+        .rank-other { color: #4B5563; }
+
+        .student-tag-assign {
+            @apply inline-flex items-center bg-gray-200 rounded px-2.5 py-1 text-sm font-medium text-gray-800 mb-2;
+        }
+        .remove-student-btn {
+            @apply ml-2 w-5 h-5 flex items-center justify-center bg-red-600 text-white rounded-full font-bold text-sm leading-none transition-transform duration-200 hover:scale-110 hover:bg-red-700;
+            text-decoration: none !important; /* 確保超連結沒有底線 */
+        }
+        .confirm-dept-btn {
+            @apply ml-4 px-3 py-1 bg-green-600 text-white text-xs font-bold rounded-md hover:bg-green-700 shadow-sm;
+            @apply transition-all duration-150 ease-in-out; /* 新增過渡效果 */
+        }
+        .confirm-dept-btn:active {
+            /* 新增按下時的狀態：輕微下沉、背景變深、陰影變為內部陰影 */
+            @apply transform translate-y-px bg-green-800 shadow-inner;
+        }
+        .confirm-dept-btn:disabled {
+            @apply bg-gray-400 hover:bg-gray-400 cursor-not-allowed shadow-none;
+            @apply transform-none; /* 確保禁用時無位移 */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-3xl font-bold text-center text-blue-800 mb-6">社區高中生涯參訪 - 志願配對程式</h1>
+
+        <!-- 區塊一：資料匯入 -->
+        <div class="bg-white p-6 md:p-8 rounded-lg shadow-xl mb-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">1. 資料匯入</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- 文字貼上 -->
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label for="paste-area" class="block text-sm font-medium text-gray-700">貼上資料 (從 Google 試算表複製)</label>
+                        <button id="clear-paste-area" class="px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-md hover:bg-red-600 transition-colors">
+                            清除
+                        </button>
+                    </div>
+                    <textarea id="paste-area" rows="10" class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="座號[Tab]姓名[Tab]志願序字串 (例如: 7,1,5,...)">1	楊子青	4,6,7,5,2,8,10,3,9,1
+2	魏寧妤	2,4,6,8,7,9,1,3,10,5
+3	吳紫妍	2,4,7,8,6,9,1,3,5,10
+4	張子琦	4,7,6,10,8,2,5,1,9,3
+5	林愷昕	6,7,2,9,8,10,5,4,1,3
+6	徐莉婕	6,7,2,9,5,4,8,10,1,3
+7	江凱璇	7,6,2,9,8,1,5,10,4,3
+8	黃喜苓	4,6,2,9,5,7,8,10,3,1
+9	譚日晰	4,5,10,2,6,3,7,1,8,9
+10	魏千紜	2,9,4,5,6,7,10,8,3,1
+11	賴品汝	9,10,8,2,6,7,4,5,3,1
+12	林芊亞	4,5,2,6,1,3,9,8,7,10
+13	江嘉純	1,2,3,4,5,6,7,8,9,10
+14	王潔心	4,2,5,1,10,6,7,8,9,3
+15	林暐倫	1,3,5,7,8,2,4,6,9,10
+16	温家亮	1,3,5,7,8,9,4,6,2,10
+17	蘇楦紘	1,3,5,7,8,2,4,6,9,10
+18	趙毅亮	9,6,7,2,8,4,3,10,5,1
+19	王長綸	9,6,8,2,7,4,10,5,1,3
+20	周楹家	9,3,1,8,7,6,2,10,5,4
+21	李至昇	5,1,7,9,8,10,3,6,2,4
+22	廖雲旭	5,1,7,3,8,10,6,4,9,2
+23	林秉昇	1,3,5,7,8,2,4,9,6,10
+24	邱子瀚	3,1,5,2,10,7,8,4,9,6
+25	陳奕銨	1,3,2,5,8,4,9,7,10,6
+26	林汶謙	1,3,5,7,8,2,4,6,9,10
+27	賴雨陞	1,3,5,7,4,9,8,2,10,6
+28	姚天裕	8,7,3,9,2,1,5,4,10,6
+29	施澄昊	7,6,2,5,10,8,4,9,1,3</textarea>
+                </div>
+                <!-- 檔案上傳 -->
+                <div class="flex flex-col justify-between">
+                    <div>
+                        <label for="file-input" class="block text-sm font-medium text-gray-700 mb-1">或上傳檔案 (TSV/CSV)</label>
+                        <input type="file" id="file-input" accept=".csv,.tsv,.txt" class="w-full text-sm text-gray-500
+                            file:mr-4 file:py-2 file:px-4
+                            file:rounded-full file:border-0
+                            file:text-sm file:font-semibold
+                            file:bg-blue-50 file:text-blue-700
+                            hover:file:bg-blue-100
+                        ">
+                        <p id="file-name" class="text-xs text-gray-500 mt-2"></p>
+                    </div>
+                    <button id="process-button" class="w-full px-6 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors">
+                        處理資料並顯示結果
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 區塊二 & 三 & 四：結果顯示 (預設隱藏) -->
+        <div id="results-container" class="hidden">
+            <!-- 分頁按鈕 -->
+            <div class="border-b border-gray-300">
+                <nav class="-mb-px flex space-x-4 overflow-x-auto">
+                    <button id="tab-student" class="tab-button active" data-target="student-results-pane">
+                        依學生排序
+                    </button>
+                    <button id="tab-dept" class="tab-button" data-target="dept-results-pane">
+                        依科系排序 (顏色標示)
+                    </button>
+                    <button id="tab-assign" class="tab-button" data-target="assign-pane">
+                        志願分發 (最終確認)
+                    </button>
+                    <button id="tab-final" class="tab-button" data-target="final-results-pane">
+                        最終錄取總表
+                    </button>
+                </nav>
+            </div>
+
+            <!-- 內容面板 -->
+            <div>
+                <!-- 區塊二：依學生排序 -->
+                <div id="student-results-pane" class="tab-pane">
+                    <!-- 學生表格將動態生成於此 -->
+                </div>
+                <!-- 區塊三：依科系排序 -->
+                <div id="dept-results-pane" class="tab-pane hidden">
+                    <!-- 科系列表將動態生成於此 -->
+                </div>
+                <!-- 區塊四：志願分發 -->
+                <div id="assign-pane" class="tab-pane hidden">
+                    <!-- 志願分發介面將動態生成於此 -->
+                </div>
+                <!-- 區塊五：最終總表 -->
+                <div id="final-results-pane" class="tab-pane hidden">
+                    <!-- 最終錄取表格將動態生成於此 -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal -->
+    <div id="alert-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center hidden">
+        <div class="relative p-5 border w-11/12 md:w-1/3 shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <h3 id="alert-modal-title" class="text-lg leading-6 font-medium text-gray-900"></h3>
+                <div class="mt-2 px-7 py-3">
+                    <p id="alert-modal-content" class="text-sm text-gray-500"></p>
+                </div>
+                <div class="items-center px-4 py-3">
+                    <button id="alert-modal-close" class="px-4 py-2 bg-blue-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        關閉
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. 內建科系資料 ---
+        const DEPT_DETAILS = {
+            1: { name: "電子科", desc: "A 棟 2 樓 - 電子實習室" },
+            2: { name: "寵經科", desc: "C 棟 1 樓 - 寵物美容教室" },
+            3: { name: "機械科", desc: "B 棟 1 樓 - 機械工場" },
+            4: { name: "廣設科", desc: "E 棟 3 樓 - 繪圖教室" },
+            5: { name: "室設科", desc: "E 棟 2 樓 - 室內設計教室" },
+            6: { name: "美容科", desc: "C 棟 3 樓 - 美容美髮教室" },
+            7: { name: "餐飲科", desc: "D 棟 1 樓 - 烘焙教室" },
+            8: { name: "觀光科", desc: "D 棟 2 樓 - 實習旅館" },
+            9: { name: "幼保科", desc: "C 棟 2 樓 - 保育教室" },
+            10: { name: "應英科", desc: "A 棟 5 樓 - 語言教室" }
+        };
+        const DEPT_KEYS = Object.keys(DEPT_DETAILS).map(Number);
+
+        const RANK_COLORS = ['rank-1', 'rank-2', 'rank-3', 'rank-4', 'rank-5'];
+        const MAX_ADMITTED = 3;
+
+        // --- 全域變數 ---
+        let studentData = []; 
+        let globalApplicationsByDept = {};
+        let masterAdmittedList = new Set();
+        let autoAdmittedMap = new Map();
+        let finalAdmissionsByDept = new Map(); // 儲存最終錄取名單 {deptId: [name1, name2]}
+        let fileContent = null; 
+
+        // --- 2. DOM 元素 ---
+        const pasteArea = document.getElementById('paste-area');
+        const clearPasteAreaButton = document.getElementById('clear-paste-area'); // 新增清除按鈕
+        const fileInput = document.getElementById('file-input');
+        const fileNameDisplay = document.getElementById('file-name');
+        const processButton = document.getElementById('process-button');
+        const resultsContainer = document.getElementById('results-container');
+        
+        const tabStudent = document.getElementById('tab-student');
+        const tabDept = document.getElementById('tab-dept');
+        const tabAssign = document.getElementById('tab-assign');
+        const tabFinal = document.getElementById('tab-final');
+        const studentPane = document.getElementById('student-results-pane');
+        const deptPane = document.getElementById('dept-results-pane');
+        const assignPane = document.getElementById('assign-pane');
+        const finalPane = document.getElementById('final-results-pane');
+
+        const alertModal = document.getElementById('alert-modal');
+        const alertModalTitle = document.getElementById('alert-modal-title');
+        const alertModalContent = document.getElementById('alert-modal-content');
+        const alertModalClose = document.getElementById('alert-modal-close');
+
+        // --- 3. 事件監聽 ---
+
+        clearPasteAreaButton.addEventListener('click', () => {
+            pasteArea.value = ''; // 清空文字區
+        });
+
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                fileNameDisplay.textContent = `已選擇檔案：${file.name}`;
+                const reader = new FileReader();
+                reader.onload = (e) => { fileContent = e.target.result; };
+                reader.readAsText(file);
+            } else {
+                fileNameDisplay.textContent = '';
+                fileContent = null;
+            }
+        });
+
+        processButton.addEventListener('click', () => {
+            let inputText = (fileContent || pasteArea.value) || ''; 
+            if (!inputText.trim()) {
+                showAlert('資料錯誤', '沒有資料可處理！請貼上資料或上傳檔案。');
+                return;
+            }
+            
+            parseData(inputText);
+            if (studentData.length === 0) {
+                 showAlert('資料錯誤', '無法成功解析資料。請檢查格式是否為：座號[Tab]姓名[Tab]志願序。');
+                 return;
+            }
+            buildGlobalApplications();
+
+            renderStudentTable();
+            renderDepartmentList();
+            renderAssignmentPane();
+            
+            resultsContainer.classList.remove('hidden');
+            showTab('student-results-pane');
+        });
+
+        tabStudent.addEventListener('click', () => showTab('student-results-pane'));
+        tabDept.addEventListener('click', () => showTab('dept-results-pane'));
+        tabAssign.addEventListener('click', () => {
+            // 每次點擊「志願分發」分頁時，都重新渲染
+            renderAssignmentPane();
+            showTab('assign-pane');
+        });
+
+        tabFinal.addEventListener('click', () => {
+            renderFinalTable(); // 渲染最終表格
+            showTab('final-results-pane');
+        });
+
+        alertModalClose.addEventListener('click', () => {
+            alertModal.classList.add('hidden');
+        });
+
+        // --- 4. 核心功能函式 ---
+
+        function showAlert(title, content) {
+            alertModalTitle.textContent = title;
+            alertModalContent.textContent = content;
+            alertModal.classList.remove('hidden');
+        }
+
+        function showTab(targetPaneId) {
+            [tabStudent, tabDept, tabAssign, tabFinal].forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.target === targetPaneId);
+            });
+            [studentPane, deptPane, assignPane, finalPane].forEach(pane => {
+                pane.classList.toggle('hidden', pane.id !== targetPaneId);
+            });
+        }
+
+        function parseData(text) {
+            studentData = [];
+            const lines = text.split('\n');
+            const firstLine = lines[0] || '';
+            // 檢查是 Tab 還是 Comma (CSV)
+            const separator = (firstLine.match(/\t/g) || []).length > 0 ? '\t' : ',';
+            
+            lines.forEach(line => {
+                const trimmedLine = line.trim();
+                if (!trimmedLine) return;
+
+                let parts;
+                if (separator === '\t') {
+                    parts = trimmedLine.split('\t');
+                } else {
+                    // CSV 簡易解析：座號,姓名,志願1,志願2...
+                    // 或是 座號,姓名,"志願1,志願2..."
+                    parts = [];
+                    const splitByComma = trimmedLine.split(',');
+                    if (splitByComma.length >= 3) {
+                        parts.push(splitByComma[0]); // 座號
+                        parts.push(splitByComma[1]); // 姓名
+                        // 將剩餘的部分合併為志願字串
+                        parts.push(splitByComma.slice(2).join(',')); 
+                    } else {
+                        parts = splitByComma; // 格式不符，但還是嘗試解析
+                    }
+                }
+
+                if (parts.length >= 3) {
+                    const seat = parts[0].trim().replace(/"/g, '');
+                    const name = parts[1].trim().replace(/"/g, '');
+                    const rawPrefs = parts[2].trim().replace(/"/g, ''); // 移除引號
+                    // 確保志願是數字且大於0
+                    const prefs = rawPrefs.split(',').map(Number).filter(id => id > 0 && DEPT_DETAILS[id]);
+                    studentData.push({ seat, name, rawPrefs, prefs });
+                }
+            });
+        }
+
+        function buildGlobalApplications() {
+            globalApplicationsByDept = {};
+            // 初始化所有科系的申請列表
+            DEPT_KEYS.forEach(id => {
+                globalApplicationsByDept[id] = [];
+            });
+
+            // 遍歷學生資料，建立科系的申請人列表
+            studentData.forEach(student => {
+                student.prefs.forEach((deptId, index) => {
+                    const rank = index + 1; // 志願序 (1-based)
+                    if (globalApplicationsByDept[deptId]) {
+                        globalApplicationsByDept[deptId].push({
+                            name: student.name,
+                            rank: rank
+                        });
+                    }
+                });
+            });
+
+            // 將每個科系的申請人依照志願序排序
+            DEPT_KEYS.forEach(deptId => {
+                globalApplicationsByDept[deptId].sort((a, b) => a.rank - b.rank);
+            });
+        }
+
+        function renderStudentTable() {
+            // 依座號排序 (數字排序)
+            studentData.sort((a, b) => a.seat.localeCompare(b.seat, undefined, { numeric: true }));
+            
+            let tableHtml = `<div class="overflow-x-auto p-4 bg-white rounded-b-lg shadow"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">座號</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">姓名</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">志願列表 (科系名稱(志願序))</th></tr></thead><tbody class="bg-white divide-y divide-gray-200">`;
+
+            studentData.forEach(student => {
+                const prefString = student.prefs.map((deptId, index) => {
+                    const deptName = DEPT_DETAILS[deptId] ? DEPT_DETAILS[deptId].name : '未知科系';
+                    return `${deptName}(${index + 1})`;
+                }).join(', ');
+
+                tableHtml += `<tr><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${student.seat}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${student.name}</td><td class="px-6 py-4 text-sm text-gray-500">${prefString}</td></tr>`;
+            });
+
+            tableHtml += `</tbody></table></div>`;
+            studentPane.innerHTML = tableHtml;
+        }
+
+        function renderDepartmentList() {
+            let listHtml = `<div class="p-4 bg-white rounded-b-lg shadow space-y-4">`;
+
+            DEPT_KEYS.forEach(deptId => {
+                const deptName = DEPT_DETAILS[deptId].name;
+                const applications = globalApplicationsByDept[deptId] || [];
+
+                let studentListHtml = '';
+                if (applications.length === 0) {
+                    studentListHtml = '<span class="text-gray-500 italic">無人選填</span>';
+                } else {
+                    // 取得靜態的顏色標示資料
+                    const coloredData = getColoredStudentsData_Static(applications);
+                    
+                    const allHtmlItems = applications.map(app => {
+                        // 檢查該學生是否在「會被標示顏色」的名單中
+                        const coloredVersion = coloredData.find(c => c.name === app.name && c.rank === app.rank);
+                        const colorClass = coloredVersion ? coloredVersion.color : 'rank-other';
+                        return `<span class="${colorClass}">${app.name}(${app.rank})</span>`;
+                    });
+                    studentListHtml = allHtmlItems.join(', ');
+                }
+                
+                listHtml += `<div class="border-b pb-2"><h3 class="text-lg font-semibold text-gray-800">${deptId}. ${deptName}</h3><p class="text-sm mt-1 leading-relaxed">${studentListHtml}</p></div>`;
+            });
+
+            listHtml += `</div>`;
+            deptPane.innerHTML = listHtml;
+        }
+        
+        // 靜態顏色標示函式 (僅用於「依科系排序」分頁)
+        function getColoredStudentsData_Static(applications) {
+            const coloredStudents = [];
+            let admittedCount = 0;
+            let currentRank = 1; // 預設為 1，專門處理志願 1
+            let colorIndex = 1; // 下一批次從 1 (藍色) 開始
+            let currentBatchColor = 'rank-other';
+            let quotaMet = false; // 是否已達 3 人
+
+            for (const app of applications) {
+
+                if (app.rank === 1) {
+                    currentBatchColor = RANK_COLORS[0]; // 志願 1 永遠是紅色
+                } else if (app.rank > currentRank) { // 進入下一個志願序
+                    if (quotaMet) {
+                        // 如果上一輪已經滿 3 人，且現在是下一個志願序，則停止標記
+                        break;
+                    }
+                    // 下一批次，無論志願序是多少 (2, 3, 4...)
+                    currentBatchColor = RANK_COLORS[colorIndex++] || 'rank-other';
+                    currentRank = app.rank;
+                }
+                // else: 仍在同一批次中 (例如: 兩個 志願 3)
+                
+                if (currentBatchColor !== 'rank-other') {
+                    coloredStudents.push({ ...app, color: currentBatchColor });
+                    admittedCount++;
+                    if (admittedCount >= MAX_ADMITTED) {
+                        quotaMet = true; // 標記已滿額
+                    }
+                }
+            }
+            return coloredStudents;
+        }
+        
+        // --- 區塊四：志願分發 (核心邏輯) ---
+
+        function renderAssignmentPane() {
+            // 每次重新渲染都重置錄取名單
+            masterAdmittedList.clear();
+            autoAdmittedMap.clear();
+            finalAdmissionsByDept.clear();
+            
+            let html = `<div class="p-4 space-y-6">
+                <div class="text-sm text-blue-700 bg-blue-50 p-3 rounded-lg space-y-2">
+                    <p><b>分發邏 B（2024-11-11 更新）：</b></p>
+                    <p>1. 系統<b>自動錄取</b>所有「志願1」的學生 (除非該科系 志願1 > 3人)。</p>
+                    <p>2. 請優先處理「志願1 > 3人」的科系 (手動抽籤)。</p>
+                    <p>3. 再依序確認其他科系，系統會自動遞補名額 (補滿 3 人為止)。</imgc></p>
+                </div>
+            `;
+            
+            // 1. 預處理所有科系，找出需要自動錄取的學生
+            const deptsWithData = DEPT_KEYS.map(deptId => {
+                const applications = globalApplicationsByDept[deptId] || [];
+                const rank1Count = applications.filter(s => s.rank === 1).length;
+                return { deptId, applications, rank1Count };
+            });
+
+            // 2. 執行自動錄取 (志願1 = 1, 2, 3 人的情況)
+            deptsWithData.forEach(dept => {
+                const deptName = DEPT_DETAILS[dept.deptId].name;
+                
+                if (dept.rank1Count > 0 && dept.rank1Count <= 3) {
+                    const rank1Students = dept.applications.filter(s => s.rank === 1);
+                    const studentNames = [];
+                    rank1Students.forEach(student => {
+                        // 檢查是否已在其他科系被自動錄取 (雖然志願1不太可能衝突，但以防萬一)
+                        if (!masterAdmittedList.has(student.name)) {
+                            masterAdmittedList.add(student.name);
+                            autoAdmittedMap.set(student.name, {dept: deptName, rank: student.rank});
+                            studentNames.push(student.name);
+                        }
+                    });
+                    finalAdmissionsByDept.set(dept.deptId, studentNames); // 預存自動錄取名單
+                }
+            });
+
+            // 3. 排序科系：優先顯示「手動抽籤」的，然後是「志願1=3」的，最後是其他的
+            const groupManualDraw = deptsWithData.filter(d => d.rank1Count > 3).sort((a, b) => a.deptId - b.deptId);
+            const groupExact3 = deptsWithData.filter(d => d.rank1Count === 3).sort((a, b) => a.deptId - b.deptId);
+            const groupOthers = deptsWithData.filter(d => d.rank1Count < 3) // 包含 0, 1, 2
+                                          .sort((a, b) => {
+                                              if (a.rank1Count !== b.rank1Count) return b.rank1Count - a.rank1Count; // 2 -> 1 -> 0
+                                              return a.deptId - b.deptId;
+                                          });
+            
+            const sortedDepts = [...groupManualDraw, ...groupExact3, ...groupOthers];
+
+            // 4. 渲染所有科系的區塊
+            sortedDepts.forEach(({ deptId, applications, rank1Count }) => {
+                const deptName = DEPT_DETAILS[deptId].name;
+                
+                const isFullyAutoAdmitted = (rank1Count === 3);
+                
+                let groupTitle = '';
+                if (rank1Count > 3) groupTitle = `(志願1=${rank1Count}人, 需手動抽籤!)`;
+                else if (rank1Count === 3) groupTitle = '(志願1=3人, 全部自動錄取)';
+                else if (rank1Count === 2) groupTitle = '(志願1=2人, 優先錄取)'; // <--- 修改
+                else if (rank1Count === 1) groupTitle = '(志願1=1人, 優先錄取)'; // <--- 修改
+                else groupTitle = '(志願1=0人, 等待遞補)';
+
+                let titleColor = "text-gray-800";
+                if (rank1Count > 3) titleColor = "text-red-600 font-bold";
+                else if (rank1Count === 3) titleColor = "text-green-600";
+
+
+                html += `<div class="border border-gray-300 rounded-lg p-4 shadow-sm" id="dept-assign-${deptId}">`;
+                html += `<h4 class="text-lg font-semibold ${titleColor} flex items-center justify-between">
+                            <span>${deptId}. ${deptName} <span class="text-sm text-gray-500 font-normal ml-2">${groupTitle}</span></span>
+                            <button class="confirm-dept-btn" data-dept-id="${deptId}" 
+                                ${isFullyAutoAdmitted ? 'disabled' : ''} 
+                                onclick="handleConfirmDept(event)">
+                                ${isFullyAutoAdmitted ? '已確認 (自動)' : 'OK (確認名單)'}
+                            </button>
+                         </h4>`;
+                
+                // 容器：自動錄取 (綠色標籤)
+                html += `<div class="mt-3 leading-relaxed" id="dept-auto-list-${deptId}"></div>`;
+                // 容器：手動處理 (灰色標籤 + 移除按鈕)
+                html += `<div class="mt-2 leading-relaxed" id="dept-manual-list-${deptId}"></div>`;
+                // 容器：備取 (純文字)
+                html += `<div class="mt-2 text-xs text-gray-400" id="dept-waiting-list-${deptId}"></div>`;
+                html += `</div>`;
+            });
+
+            html += `</div>`;
+            assignPane.innerHTML = html;
+
+            // 5. 初始渲染所有科系的待選名單
+            refreshManualDepts(true);
+        }
+
+        function handleRemoveStudent(event) {
+            const tag = event.target.closest('.student-tag-assign');
+            if (tag) {
+                // 移除標籤
+                tag.remove();
+                
+                // 檢查並移除前後的逗號 (美觀用)
+                let nextNode = tag.nextSibling;
+                if (nextNode && nextNode.nodeType === Node.TEXT_NODE && nextNode.textContent.startsWith(', ')) {
+                    nextNode.remove();
+                } else {
+                    let prevNode = tag.previousSibling;
+                    if (prevNode && prevNode.nodeType === Node.TEXT_NODE && prevNode.textContent.endsWith(', ')) {
+                        prevNode.textContent = prevNode.textContent.slice(0, -2);
+                    }
+                }
+            }
+        }
+
+        function handleConfirmDept(event) {
+            const button = event.target;
+            const deptId = button.dataset.deptId;
+            const deptBox = document.getElementById(`dept-assign-${deptId}`);
+            
+            if (!deptBox || button.disabled) return;
+
+            const deptIdNum = parseInt(deptId, 10);
+            const manualListContainer = document.getElementById(`dept-manual-list-${deptId}`);
+            const remainingTags = manualListContainer.querySelectorAll('.student-tag-assign');
+            
+            // 取得手動確認錄取的學生
+            const manualAdmittedNames = [];
+            remainingTags.forEach(tag => {
+                const name = tag.dataset.name;
+                manualAdmittedNames.push(name);
+                masterAdmittedList.add(name); // 加入最終錄取名單
+            });
+
+            // 結合自動錄取 + 手動錄取的學生，存入最終名單
+            const autoAdmittedNames = finalAdmissionsByDept.get(deptIdNum) || [];
+            finalAdmissionsByDept.set(deptIdNum, [...autoAdmittedNames, ...manualAdmittedNames]);
+
+            // 鎖定這個科系
+            button.textContent = '已確認 (手動)';
+            button.disabled = true;
+            deptBox.classList.add('opacity-60', 'bg-gray-50');
+            // 移除所有 ⊗ 按鈕
+            manualListContainer.querySelectorAll('.remove-student-btn').forEach(x => x.remove());
+            // 替換樣式，標示為已錄取
+            manualListContainer.querySelectorAll('.student-tag-assign').forEach(tag => {
+                tag.classList.remove('bg-gray-200', 'text-gray-800');
+                tag.classList.add('bg-green-200', 'text-green-800');
+            });
+
+            // 觸發其他科系的連鎖反應
+            refreshManualDepts(false);
+            
+            showAlert('確認成功', `已確認 ${DEPT_DETAILS[deptId].name} 的 ${manualAdmittedNames.length} 位學生。\n正在為其他科系遞補名單...`);
+        }
+
+        function refreshManualDepts(isInitialLoad) {
+            
+            DEPT_KEYS.forEach(deptId => {
+                const deptBox = document.getElementById(`dept-assign-${deptId}`);
+                if (!deptBox) return; 
+                
+                const button = deptBox.querySelector('.confirm-dept-btn');
+                if (!button) return; 
+
+                // 只更新「尚未確認」的科系 (或是初始載入時)
+                if (isInitialLoad || !button.disabled) {
+                    
+                    const applications = globalApplicationsByDept[deptId] || [];
+                    const deptName = DEPT_DETAILS[deptId].name;
+                    
+                    let studentList_Auto_Html = [];   // 自動錄取 (綠標)
+                    let studentList_Manual_Html = []; // 手動處理 (灰標 + ⊗)
+                    let studentList_Waiting_Html = [];// 備取 (純文字)
+
+                    let admittedCountInDept = 0;
+                    let currentRank = 1; // 預設為 1，專門處理志願 1
+                    let colorIndex = 1; // 下一批次從 1 (藍色) 開始
+                    let currentBatchColor = 'rank-other';
+                    let quotaMet = false; // 是否已達 3 人
+
+                    for (const app of applications) {
+                        
+                        // 檢查是否已在其他科系被錄取
+                        if (masterAdmittedList.has(app.name)) {
+                            // 檢查他是不是「被自動錄取」在 *這個* 科系
+                            const autoInfo = autoAdmittedMap.get(app.name);
+                            if (autoInfo && autoInfo.dept === deptName) {
+                                // 是，顯示為自動錄取
+                                studentList_Auto_Html.push(`
+                                    <span class="student-tag-assign bg-green-200 text-green-800" data-name="${app.name}" data-rank="${app.rank}">
+                                        <span class="font-bold">${app.name}(${app.rank})</span> (優先錄取)
+                                    </span>
+                                `); // <--- 修改
+                                admittedCountInDept++;
+                            }
+                            // 如果不是，那他就是被其他科系錄取了，直接跳過，不顯示在此
+                            continue;
+                        }
+
+                        // --- 尚未被錄取的學生 ---
+
+                        if (quotaMet) {
+                            // 如果名額已滿，但仍在同一個志願序 (例如 志願2 有 5 個人)
+                            if (app.rank === currentRank) {
+                                // 繼續顯示，但放入「手動處理」
+                            } else {
+                                // 進入下一個志願序了，顯示為備取
+                                studentList_Waiting_Html.push(`${app.name}(${app.rank})`);
+                                continue; // 不計入顏色和錄取名額
+                            }
+                        }
+
+                        // 判斷顏色
+                        if (app.rank === 1) {
+                            currentBatchColor = RANK_COLORS[0]; // 志願 1 永遠是紅色
+                        } else if (app.rank > currentRank) { // 進入下一個志願序
+                            currentBatchColor = RANK_COLORS[colorIndex++] || 'rank-other';
+                            currentRank = app.rank;
+                        }
+                        // else: 仍在同一批次中
+                        
+                        if (currentBatchColor !== 'rank-other') {
+                            // 進入正取/待選名單
+                            studentList_Manual_Html.push(`
+                                <span class="student-tag-assign" data-name="${app.name}" data-rank="${app.rank}">
+                                    <span class="${currentBatchColor}">${app.name}(${app.rank})</span>
+                                    <a href="#" class="remove-student-btn" onclick="handleRemoveStudent(event); return false;">⊗</a>
+                                </span>
+                            `);
+                            admittedCountInDept++;
+
+                            if (admittedCountInDept >= MAX_ADMITTED) {
+                                quotaMet = true; // 標記滿額
+                            }
+                        } else {
+                            // 5 志願以後的，列為備取
+                             studentList_Waiting_Html.push(`${app.name}(${app.rank})`);
+                        }
+                    }
+                    
+                    const autoContainer = document.getElementById(`dept-auto-list-${deptId}`);
+                    if (autoContainer) {
+                        autoContainer.innerHTML = studentList_Auto_Html.join(', ');
+                    }
+                    
+                    const manualContainer = document.getElementById(`dept-manual-list-${deptId}`);
+                    if (manualContainer) {
+                        let manualHtml = studentList_Manual_Html.join(', ');
+                        
+                        // 如果同時有自動和手動，中間加個逗號
+                        if (studentList_Auto_Html.length > 0 && studentList_Manual_Html.length > 0) {
+                            manualHtml = ', ' + manualHtml;
+                        }
+                        manualContainer.innerHTML = manualHtml;
+                    }
+
+                    const waitingContainer = document.getElementById(`dept-waiting-list-${deptId}`);
+                    if (waitingContainer) {
+                        if (studentList_Waiting_Html.length > 0) {
+                             waitingContainer.innerHTML = "備取：" + studentList_Waiting_Html.join(', ');
+                        } else {
+                            waitingContainer.innerHTML = "";
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- 區塊五：最終總表 ---
+        function renderFinalTable() {
+            // 檢查是否所有科系都已確認
+            const allConfirmed = DEPT_KEYS.every(id => {
+                const button = document.querySelector(`#dept-assign-${id} .confirm-dept-btn`);
+                // 如果按鈕存在且被禁用，則視為已確認
+                return button && button.disabled;
+            });
+
+            if (!allConfirmed) {
+                finalPane.innerHTML = `<div class="p-4 text-center text-red-600 bg-red-50 rounded-lg">
+                    <p class="font-semibold">尚未完成所有科系的分發！</p>
+                    <p class="text-sm mt-1">請先在「志願分發 (最終確認)」分頁中，手動處理 (抽籤) 並「確認」所有科系的名單後，再返回此處查看總表。</p>
+                </div>`;
+                return;
+            }
+
+            // 建立表格
+            let tableHtml = `
+                <div class="p-4 bg-white rounded-b-lg shadow space-y-4">
+            `;
+
+            let totalAdmittedCount = 0;
+
+            DEPT_KEYS.forEach(id => {
+                const details = DEPT_DETAILS[id];
+                const admittedNames = finalAdmissionsByDept.get(id) || [];
+                totalAdmittedCount += admittedNames.length;
+
+                // 準備三欄的學生姓名，不足則補上 '無'
+                const student1 = admittedNames[0] || '<span class="text-gray-400 italic">無</span>';
+                const student2 = admittedNames[1] || '<span class="text-gray-400 italic">無</span>';
+                const student3 = admittedNames[2] || '<span class="text-gray-400 italic">無</span>';
+                
+                let countColor = 'text-gray-900';
+                if (admittedNames.length > MAX_ADMITTED) {
+                    countColor = 'text-red-600 font-bold'; // 標記人數異常
+                }
+
+                tableHtml += `
+                    <table class="min-w-full divide-y divide-gray-200 border">
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td class="px-6 py-4 w-1/4 text-sm font-semibold text-gray-700 bg-gray-50">${details.name} <span class="font-medium ${countColor}">[${admittedNames.length} 人]</span></td>
+                                <td class="px-6 py-4 w-1/4 text-sm text-gray-900">${student1}</td>
+                                <td class="px-6 py-4 w-1/4 text-sm text-gray-900">${student2}</td>
+                                <td class="px-6 py-4 w-1/4 text-sm text-gray-900">${student3}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                `;
+            });
+
+            // 總人數表格
+            tableHtml += `
+                <table class="min-w-full divide-y divide-gray-200 border mt-6">
+                    <tbody class="bg-gray-50">
+                        <tr>
+                            <td class="px-6 py-4 text-center text-sm font-bold text-blue-800">
+                                總錄取人數：${totalAdmittedCount} 人
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+            
+            tableHtml += `</div>`;
+            finalPane.innerHTML = tableHtml;
+        }
+
+    </script>
+
+</body>
+</html>
