@@ -177,16 +177,16 @@
     <script>
         // --- 1. 內建科系資料 ---
         const DEPT_DETAILS = {
-            1: { name: "電子科", desc: "A 棟 2 樓 - 電子實習室" },
-            2: { name: "寵經科", desc: "C 棟 1 樓 - 寵物美容教室" },
-            3: { name: "機械科", desc: "B 棟 1 樓 - 機械工場" },
-            4: { name: "廣設科", desc: "E 棟 3 樓 - 繪圖教室" },
-            5: { name: "室設科", desc: "E 棟 2 樓 - 室內設計教室" },
-            6: { name: "美容科", desc: "C 棟 3 樓 - 美容美髮教室" },
-            7: { name: "餐飲科", desc: "D 棟 1 樓 - 烘焙教室" },
-            8: { name: "觀光科", desc: "D 棟 2 樓 - 實習旅館" },
-            9: { name: "幼保科", desc: "C 棟 2 樓 - 保育教室" },
-            10: { name: "應英科", desc: "A 棟 5 樓 - 語言教室" }
+            1: { name: "電子科", theme: "電路設計DIY", desc: "電子電路套件實作，完成後會有意想不到的功能" },
+            2: { name: "寵經科", theme: "寵愛毛小孩", desc: "寵物飾品配件製作" },
+            3: { name: "機械科", theme: "泡殼迴力車", desc: "真空成型機秒速成型，應用創意製作模具" },
+            4: { name: "廣設科", theme: "二次元文創藝術世界", desc: "商品圖紋設計製作並以熱轉印技術完成商品印製" },
+            5: { name: "室設科", theme: "木作模型小達人", desc: "基礎手作桌椅木質家具模型並彩繪上色" },
+            6: { name: "美容科", theme: "指尖上的藝術", desc: "以光療技巧，劃出抽象線條完成甲片，製作吊飾" },
+            7: { name: "餐飲科", theme: "藍帶一番小當家", desc: "餅乾蛋糕製作或中西式餐點製作" },
+            8: { name: "觀光科", theme: "雪克搖搖搖", desc: "各式飲料特性學與調製" },
+            9: { name: "幼保科", theme: "偶來與你相遇", desc: "設計製作各式可愛的玩偶與手偶" },
+            10: { name: "應英科", theme: "拼豆世界", desc: "全方位英語學習，創意拼豆手作課，拼出你的想像力" }
         };
         const DEPT_KEYS = Object.keys(DEPT_DETAILS).map(Number);
 
@@ -549,19 +549,21 @@
         function handleRemoveStudent(event) {
             const tag = event.target.closest('.student-tag-assign');
             if (tag) {
-                // 移除標籤
-                tag.remove();
                 
-                // 檢查並移除前後的逗號 (美觀用)
+                let prevNode = tag.previousSibling;
                 let nextNode = tag.nextSibling;
-                if (nextNode && nextNode.nodeType === Node.TEXT_NODE && nextNode.textContent.startsWith(', ')) {
+
+                // 優先嘗試移除 *前面* 的 ", " (trim() 用於處理可能的空白)
+                if (prevNode && prevNode.nodeType === Node.TEXT_NODE && prevNode.textContent.trim() === ',') {
+                    prevNode.remove();
+                } 
+                // 否則，嘗試移除 *後面* 的 ", "
+                else if (nextNode && nextNode.nodeType === Node.TEXT_NODE && nextNode.textContent.trim() === ',') {
                     nextNode.remove();
-                } else {
-                    let prevNode = tag.previousSibling;
-                    if (prevNode && prevNode.nodeType === Node.TEXT_NODE && prevNode.textContent.endsWith(', ')) {
-                        prevNode.textContent = prevNode.textContent.slice(0, -2);
-                    }
                 }
+                
+                // 3. 最後移除標籤本身
+                tag.remove();
             }
         }
 
@@ -762,10 +764,14 @@
                     <table class="min-w-full divide-y divide-gray-200 border">
                         <tbody class="bg-white divide-y divide-gray-200">
                             <tr>
-                                <td class="px-6 py-4 w-1/4 text-sm font-semibold text-gray-700 bg-gray-50">${details.name} <span class="font-medium ${countColor}">[${admittedNames.length} 人]</span></td>
-                                <td class="px-6 py-4 w-1/4 text-sm text-gray-900">${student1}</td>
-                                <td class="px-6 py-4 w-1/4 text-sm text-gray-900">${student2}</td>
-                                <td class="px-6 py-4 w-1/4 text-sm text-gray-900">${student3}</td>
+                                <td class="px-6 py-4 w-2/5 align-top text-sm text-gray-700 bg-gray-50">
+                                    <div class="font-bold text-gray-800">${details.name}－${details.theme}</div>
+                                    <div class="mt-1 text-xs font-normal text-gray-500">${details.desc}</div>
+                                    <div class="mt-2 font-medium ${countColor}">[${admittedNames.length} 人]</div>
+                                </td>
+                                <td class="px-6 py-4 w-1/5 align-top text-sm text-gray-900">${student1}</td>
+                                <td class="px-6 py-4 w-1/5 align-top text-sm text-gray-900">${student2}</td>
+                                <td class="px-6 py-4 w-1/5 align-top text-sm text-gray-900">${student3}</td>
                             </tr>
                         </tbody>
                     </table>
